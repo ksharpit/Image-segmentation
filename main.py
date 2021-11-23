@@ -6,62 +6,53 @@ import cv2
 
 
 n=int(input('Enter number of clusters\n'))
-print(type(n))
-print('Enter\n1 for k-means clustering\n2 for GMM')
-cmd=input('enter the desired image segmentation algorithm\n')
+print('Enter\n1 to select k-means clustering\n2 to select GMM')
+cmd=int(input('enter the desired image segmentation algorithm\n'))
 
 img = cv2.imread("flow.jpg")
 plt.imshow(img)
-# Convert MxNx3 image into Kx3 where K=MxN
-img2 = img.reshape((-1, 3))  #-1 reshape means, in this case MxN
+# For clustering, 2D array is required. -1 reshape means, in this case MxN
+img_2D = img.reshape((-1, 3))  #For clustering, 3D array is converted into 2D array
 
 
-if cmd == '1':
+if cmd == 1:
     
     print('Initiating K-means clustering')
-    #for K Mean cluster
-    kmeans = KMeans(n, init='k-means++', max_iter=300, n_init=10, random_state=42)
-    # k-means++ ensures that you get don’t fall into the random initialization trap.
-    model = kmeans.fit(img2)
-    predicted_values = kmeans.predict(img2)
-
-    #res = center[label.flatten()]
-    segm_image = predicted_values.reshape((img.shape[0], img.shape[1]))
-    plt.imshow(segm_image)
-    #plt.imshow(segm_image, cmap='gray')
-    segm_image = np.expand_dims(segm_image, axis=-1)
     
-    foreground = np.multiply(segm_image, img)
+    kmeans = KMeans(n, init='k-means++', max_iter=250, n_init=10, random_state=35)
+    # k-means++ avoids random initialization trap
+    model = kmeans.fit(img_2D) #as per img2 shape
+    values = kmeans.predict(img_2D)
+
+    mask1 = values.reshape((img.shape[0], img.shape[1])) # 2D array
+    plt.imshow(mask1) # masked cluster of k means
+    mask1 = np.expand_dims(mask1, axis=-1) # to make 2D to 3D array
+    
+    foreground = np.multiply(mask1, img)
     background = img - foreground
+    
     plt.imshow(foreground) 
     plt.imshow(background)
-  
+      
+elif cmd == 2:
     
-    
-    
-    
-elif cmd == '2':
     print('Initiating GMM')
-    #for GMM cluster
-    #covariance choices, full, tied, diag, spherical
-    gmm_model = GMM(n, covariance_type='tied').fit(img2)  #tied works better than full
-    gmm_labels = gmm_model.predict(img2)
+    
+    gmm_model = GMM(n, covariance_type='tied').fit(img_2D)  
+    gmm_labels = gmm_model.predict(img_2D)
     
     #Put numbers back to original shape so we can reconstruct segmented image
     original_shape = img.shape
-    segmented = gmm_labels.reshape(original_shape[0], original_shape[1])
-    segmented = np.expand_dims(segmented, axis=-1)
-    plt.imshow(segmented)
+    mask2 = gmm_labels.reshape(original_shape[0], original_shape[1]) #2D array
+    mask2 = np.expand_dims(mask2, axis=-1)  ## to make 2D to 3D array
+    plt.imshow(mask2) #masked cluster of GMM
     
-    foreground = np.multiply(segmented, img)
-    
+    foreground = np.multiply(mask2, img)
     background = img - foreground
+    
     plt.imshow(foreground) 
-    cv2.imwrite('fore.jpg', foreground)
     plt.imshow(background)
-    cv2.imwrite('back.jpg', background)
-    
-    
+ 
 
 else:
     print('Invalid input')
