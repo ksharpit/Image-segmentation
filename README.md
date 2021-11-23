@@ -1,6 +1,7 @@
 # Image Segmentation
 ## Image Segmentation using K-means Clustering Algorithm
 ### Sample Input and Output:
+Number of clusters = 2
 
 
 #### **Flower**
