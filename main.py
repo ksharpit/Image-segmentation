@@ -1,23 +1,27 @@
-
-import numpy as np
-from matplotlib import pyplot as plt
-import cv2
 from sklearn.cluster import KMeans
 from sklearn.mixture import GaussianMixture as GMM
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
 
-img = cv2.imread("flo.jpg")
+
+n=int(input('Enter number of clusters\n'))
+print(type(n))
+print('Enter\n1 for k-means clustering\n2 for GMM')
+cmd=input('enter the desired image segmentation algorithm\n')
+
+img = cv2.imread("flow.jpg")
 plt.imshow(img)
 # Convert MxNx3 image into Kx3 where K=MxN
 img2 = img.reshape((-1, 3))  #-1 reshape means, in this case MxN
 
-n=input('Enter number of clusters\n')
-print('Enter\n1 for k-means clustering\n2 for GMM')
-cmd=int(input('enter the desired image segmentation algorithm\n'))
 
-
-if cmd == 1:
+if cmd == '1':
+    
+    print('Initiating K-means clustering')
     #for K Mean cluster
-    kmeans = KMeans(n=2, init='k-means++', max_iter=300, n_init=10, random_state=42)
+    kmeans = KMeans(n, init='k-means++', max_iter=300, n_init=10, random_state=42)
+    # k-means++ ensures that you get don’t fall into the random initialization trap.
     model = kmeans.fit(img2)
     predicted_values = kmeans.predict(img2)
 
@@ -30,15 +34,17 @@ if cmd == 1:
     foreground = np.multiply(segm_image, img)
     background = img - foreground
     plt.imshow(foreground) 
-    cv2.imwrite('fore.jpg', foreground)
     plt.imshow(background)
-    cv2.imwrite('back.jpg', background)
+  
     
     
-elif cmd ==2:
+    
+    
+elif cmd == '2':
+    print('Initiating GMM')
     #for GMM cluster
     #covariance choices, full, tied, diag, spherical
-    gmm_model = GMM(n_components=2, covariance_type='tied').fit(img2)  #tied works better than full
+    gmm_model = GMM(n, covariance_type='tied').fit(img2)  #tied works better than full
     gmm_labels = gmm_model.predict(img2)
     
     #Put numbers back to original shape so we can reconstruct segmented image
@@ -54,6 +60,8 @@ elif cmd ==2:
     cv2.imwrite('fore.jpg', foreground)
     plt.imshow(background)
     cv2.imwrite('back.jpg', background)
+    
+    
 
 else:
     print('Invalid input')
